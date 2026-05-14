@@ -2,11 +2,17 @@ const SB_URL = 'https://ohebdbwttprejpdctwfg.supabase.co';
 const SB_KEY = 'sb_publishable_gz-Di9bGPNmO9is_p2fkDQ_tagtaSjQ';
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
-let start, active = false, user = "ANON";
+const stages = [
+    { id: 'CLASSIC', instr: 'GET TO 1.000 SEC' },
+    { id: 'BLIND', instr: 'GET TO 1.000 SEC (BLIND)' },
+    { id: 'REFLEX', instr: 'CLICK WHEN SCREEN FLASHES' }
+];
+
+let start, active = false, user = "ANON", currentStage = 0, totalDiff = 0, reflexWaiting = false, reflexTimeout;
+
 const d = document.getElementById("display");
 const resO = document.getElementById("results-overlay");
 const lbO = document.getElementById("lb-overlay");
-const i = document.getElementById("insult-box");
 const gate = document.getElementById("entry-gate");
 const gamePage = document.getElementById("game-page");
 
@@ -15,88 +21,106 @@ function init() {
     if (input.value.trim() !== "") {
         user = input.value.toUpperCase();
         gate.style.display = "none";
+        currentStage = 0; totalDiff = 0;
+        prepareStage();
         gamePage.style.display = "flex";
     }
 }
 
-function toggleLB(show) {
-    lbO.style.display = show ? "flex" : "none";
-    if (show) loadGlobalScores(document.getElementById("leaderboard-main"));
-}
-
-async function loadGlobalScores(container) {
-    try {
-        const { data } = await sb.from('scores').select('*').order('diff', { ascending: true });
-        if (data && data.length > 0) {
-            container.innerHTML = '<div style="opacity:0.2; font-size:9px; margin-bottom:12px; letter-spacing:2px; position: sticky; top: 0; background: black; padding: 5px 0;">GLOBAL RECORDS</div>';
-            data.forEach((entry, idx) => {
-                container.innerHTML += `<div class="row"><span>${idx + 1} ${entry.name}</span><span>${entry.score.toFixed(3)}s</span></div>`;
-            });
-        }
-    } catch (e) { container.innerText = "OFFLINE"; }
-}
-
-async function pushScore(score) {
-    const diff = Math.abs(1.000 - score);
-    await sb.from('scores').insert([{ name: user, score: score, diff: diff }]);
-    loadGlobalScores(document.getElementById("leaderboard-end"));
+function prepareStage() {
+    active = false; reflexWaiting = false;
+    d.innerText = "0.000"; d.style.color = "#fff";
+    gamePage.style.background = "#000";
+    document.getElementById('mode-instr').innerText = stages[currentStage].instr;
+    document.getElementById('stage-tracker').innerText = `STAGE ${currentStage + 1}/3`;
 }
 
 function trigger() {
-    if (gamePage.style.display === "flex" && resO.style.display !== "flex") {
-        if (!active) {
-            active = true;
-            start = performance.now();
-            function loop() {
-                if (!active) return;
-                d.innerText = ((performance.now() - start) / 1000).toFixed(3);
-                requestAnimationFrame(loop);
-            }
-            requestAnimationFrame(loop);
-        } else {
-            active = false;
-            const v = parseFloat(d.innerText);
-            document.getElementById("final-score").innerText = v.toFixed(3);
-            i.innerText = roast(v);
-            pushScore(v);
-            resO.style.display = "flex";
-        }
+    if (gamePage.style.display !== "flex" || resO.style.display === "flex" || lbO.style.display === "flex") return;
+    if (stages[currentStage].id === 'REFLEX') {
+        if (!active && !reflexWaiting) startReflex();
+        else if (reflexWaiting) { clearTimeout(reflexTimeout); stopGame(true); }
+        else if (active) stopGame();
+    } else {
+        if (!active) { active = true; start = performance.now(); runLoop(); }
+        else stopGame();
     }
 }
 
-function roast(v) {
-    const diff = Math.abs(1.000 - v);
-    if (diff === 0) return "GOD STATUS ACHIEVED. UNINSTALL THE REST OF YOUR LIFE.";
-    if (diff < 0.005) return "CLEAN AS HELL. YOU MIGHT ACTUALLY HAVE A BRAIN.";
-    if (diff < 0.02) return "ACCEPTABLE. BARELY.";
-    if (diff < 0.1) return "DOGWATER TIMING. MY DECEASED GRANDMA IS FASTER.";
-    if (diff < 0.3) return "EMBARRASSING. ARE YOU DRUNK OR JUST NATURALLY SLOW?";
-    return "ACTUAL RETARD LEVEL PERFORMANCE. LOG OFF.";
+function runLoop() {
+    if (!active) return;
+    const cur = (performance.now() - start) / 1000;
+    if (stages[currentStage].id === 'BLIND' && cur > 0.5) d.innerText = "???";
+    else d.innerText = cur.toFixed(3);
+    requestAnimationFrame(runLoop);
 }
 
-function rizz(e) {
-    const k = document.createElement("div");
-    k.className = "rizz"; k.innerText = "rizzking";
-    k.style.left = e.clientX + "px"; k.style.top = e.clientY + "px";
-    document.body.appendChild(k);
-    setTimeout(() => k.remove(), 800);
+function startReflex() {
+    reflexWaiting = true; d.innerText = "WAIT...";
+    reflexTimeout = setTimeout(() => {
+        reflexWaiting = false; active = true;
+        gamePage.style.background = "#fff"; d.style.color = "#000";
+        start = performance.now();
+    }, 1500 + Math.random() * 2500);
 }
 
-function reset() {
-    resO.style.display = "none";
-    d.innerText = "0.000";
+function stopGame(fault = false) {
+    active = false; reflexWaiting = false;
+    const end = performance.now();
+    let diff = fault ? 1.000 : (stages[currentStage].id === 'REFLEX' ? (end - start) / 1000 : Math.abs(1.000 - (end - start) / 1000));
+    
+    totalDiff += diff;
+    if (currentStage < 2) {
+        currentStage++;
+        prepareStage();
+    } else {
+        finishGauntlet();
+    }
 }
+
+async function finishGauntlet() {
+    gamePage.style.display = "none";
+    document.getElementById("final-score").innerText = totalDiff.toFixed(3);
+    document.getElementById("insult-box").innerText = totalDiff < 0.05 ? "GOD STATUS." : "EMBARRASSING PERFORMANCE.";
+    
+    // Push score and get rank
+    const rank = await pushAndGetRank(totalDiff);
+    document.getElementById("rank-msg").innerText = `GLOBAL RANK: #${rank}`;
+    resO.style.display = "flex";
+}
+
+async function pushAndGetRank(score) {
+    // 1. Insert the score
+    await sb.from('scores').insert([{ name: user, score: score, diff: score }]);
+    
+    // 2. Count how many people are BETTER than this score
+    const { count } = await sb
+        .from('scores')
+        .select('*', { count: 'exact', head: true })
+        .lt('diff', score);
+    
+    return count + 1; // Your rank is (people better than you) + 1
+}
+
+async function toggleLB(show) {
+    lbO.style.display = show ? "flex" : "none";
+    if (show) {
+        const { data } = await sb.from('scores').select('*').order('diff', { ascending: true }).limit(50);
+        const container = document.getElementById("leaderboard-main");
+        container.innerHTML = "";
+        data.forEach((e, idx) => {
+            const isMe = e.name === user && Math.abs(e.diff - totalDiff) < 0.0001;
+            container.innerHTML += `<div class="row ${isMe ? 'current-user' : ''}"><span>${idx + 1}. ${e.name}</span><span>${e.diff.toFixed(3)}s</span></div>`;
+        });
+    }
+}
+
+function reset() { resO.style.display = "none"; gate.style.display = "flex"; }
 
 window.addEventListener("pointerdown", (e) => {
-    // Prevent triggering game if clicking buttons or input
-    if (e.target.tagName !== "BUTTON" && e.target.tagName !== "INPUT" && !document.getElementById("can-box-entry")?.contains(e.target)) trigger();
+    if (e.target.tagName !== "BUTTON" && e.target.tagName !== "INPUT") trigger();
 });
-
 window.addEventListener("keydown", (e) => { 
-    if (e.key === "Enter") {
-        if (gate.style.display !== "none" && lbO.style.display !== "flex") init();
-        else if (resO.style.display === "flex") reset();
-        else if (lbO.style.display === "flex") toggleLB(false);
-    }
+    if (e.key === "Enter" && gate.style.display !== "none") init();
     if (e.code === "Space") trigger(); 
 });
