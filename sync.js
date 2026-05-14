@@ -88,6 +88,7 @@ function reset() {
 }
 
 window.addEventListener("pointerdown", (e) => {
+    // Prevent triggering game if clicking buttons or input
     if (e.target.tagName !== "BUTTON" && e.target.tagName !== "INPUT" && !document.getElementById("can-box-entry")?.contains(e.target)) trigger();
 });
 

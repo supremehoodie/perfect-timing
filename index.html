@@ -13,44 +13,69 @@
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body, html { background: var(--bg); color: var(--white); font-family: var(--font); width: 100%; height: 100%; overflow-x: hidden; }
         
-        /* Entry Screen - Minimalist */
+        /* Entry Screen - Clean & Minimal */
         #entry-gate { 
-            position: relative; width: 100%; min-height: 180vh; /* Forced scroll for branding */
+            position: relative; width: 100%; min-height: 200vh; /* Deep scroll for branding */
             display: flex; flex-direction: column; align-items: center; padding-top: 15vh;
         }
 
-        .fancy-title { font-family: var(--fancy); font-size: 4rem; margin-bottom: 10px; color: var(--white); text-shadow: 0 0 20px rgba(255,255,255,0.3); }
-        .gate-msg { font-size: 14px; letter-spacing: 4px; margin-bottom: 40px; font-weight: 800; opacity: 0.6; }
-
-        .main-ui { display: flex; flex-direction: column; align-items: center; gap: 15px; position: sticky; top: 25vh; }
-        input { background: transparent; border: 1px solid var(--white); color: var(--white); padding: 18px; font-family: var(--font); font-size: 1.2rem; text-align: center; outline: none; width: 280px; text-transform: uppercase; }
+        /* B&W Title Animation */
+        .fancy-title { 
+            font-family: var(--fancy); font-size: 5rem; margin-bottom: 10px; 
+            color: var(--white); 
+            animation: bw-strobe 3s steps(1) infinite;
+            text-align: center;
+        }
         
-        .btn-group { display: flex; flex-direction: column; gap: 10px; }
-        button { background: var(--white); color: var(--bg); border: none; padding: 18px 50px; font-family: var(--font); font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.2s; }
-        button.alt { background: transparent; color: var(--white); border: 1px solid var(--white); }
-        button:active { opacity: 0.7; transform: scale(0.98); }
+        @keyframes bw-strobe {
+            0%, 100% { opacity: 1; filter: invert(0); }
+            95% { opacity: 0.8; filter: invert(0.1); }
+            96% { opacity: 0.2; filter: invert(1); }
+            97% { opacity: 1; filter: invert(0); }
+            98% { opacity: 0.1; filter: invert(1); }
+        }
 
-        /* Hidden Basement Branding */
-        .branding-basement { margin-top: 100vh; padding-bottom: 100px; display: flex; flex-direction: column; align-items: center; opacity: 0.4; }
-        #can-box-entry { width: 140px; height: auto; transform-style: preserve-3d; animation: spin 8s linear infinite; cursor: pointer; margin-bottom: 20px; }
+        .gate-msg { font-size: 14px; letter-spacing: 4px; margin-bottom: 50px; font-weight: 800; opacity: 0.6; }
+
+        .main-ui { display: flex; flex-direction: column; align-items: center; gap: 20px; position: sticky; top: 20vh; z-index: 10; }
+        
+        input { 
+            background: transparent; border: 1px solid var(--white); color: var(--white); 
+            padding: 20px; font-family: var(--font); font-size: 1.2rem; text-align: center; 
+            outline: none; width: 300px; text-transform: uppercase; border-radius: 50px; /* Circular edges */
+            margin-bottom: 10px;
+        }
+        
+        /* Circular/Pill Buttons */
+        .btn-group { display: flex; flex-direction: column; gap: 15px; width: 300px; }
+        button { 
+            background: var(--white); color: var(--bg); border: none; 
+            padding: 20px; font-family: var(--font); font-weight: 800; 
+            cursor: pointer; text-transform: uppercase; letter-spacing: 2px; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 50px; /* The Circular Button Look */
+        }
+        button.alt { background: transparent; color: var(--white); border: 1px solid var(--white); }
+        button:hover { letter-spacing: 5px; }
+        button:active { opacity: 0.7; transform: scale(0.95); }
+
+        /* Branding Basement - Hidden way down */
+        .branding-basement { margin-top: 150vh; padding-bottom: 100px; display: flex; flex-direction: column; align-items: center; opacity: 0.3; }
+        #can-box-entry { width: 150px; height: auto; transform-style: preserve-3d; animation: spin 8s linear infinite; cursor: pointer; margin-bottom: 20px; }
         #pablos-can { width: 100%; height: auto; }
         @keyframes spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
-        .pablos-text { font-size: 9px; letter-spacing: 10px; text-transform: uppercase; }
-        .rizzking-title { font-size: 2rem; font-weight: 800; letter-spacing: 20px; margin-top: 20px; }
+        .pablos-text { font-size: 10px; letter-spacing: 12px; text-transform: uppercase; }
+        .rizzking-title { font-size: 2.5rem; font-weight: 800; letter-spacing: 25px; margin-top: 25px; }
 
         /* Game Screen */
         .game-container { height: 100vh; width: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; position: fixed; inset: 0; background: var(--bg); z-index: 1000; }
         #display { font-size: 25vw; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -2px; pointer-events: none; }
         .instruction-head { position: absolute; top: 40px; font-size: 14px; letter-spacing: 4px; opacity: 0.7; text-transform: uppercase; font-weight: 800; }
 
-        /* Rizzking Pop */
-        .rizz { position: absolute; font-size: 2rem; font-weight: 800; color: #4dfd4d; text-transform: uppercase; animation: rise 0.8s ease-out forwards; pointer-events: none; z-index: 2000; }
-        @keyframes rise { 0% { transform: translate(-50%, 0); opacity: 1; } 100% { transform: translate(-50%, -150px); opacity: 0; } }
-
-        /* Overlays (Leaderboard & Results) */
+        /* Overlays */
         .overlay { position: fixed; inset: 0; background: var(--bg); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1500; padding: 20px; text-align: center; }
         #final-score { font-size: 5rem; font-weight: 800; }
-        .insult { color: var(--red); font-size: 1rem; margin: 15px 0; text-transform: uppercase; max-width: 350px; }
+        .insult { color: var(--red); font-size: 1.1rem; margin: 15px 0; text-transform: uppercase; max-width: 350px; }
         
         .lb { width: 100%; max-width: 320px; margin-top: 20px; border-top: 1px solid #222; max-height: 40vh; overflow-y: auto; }
         .lb::-webkit-scrollbar { width: 4px; }
@@ -87,14 +112,12 @@
         <div id="display">0.000</div>
     </div>
 
-    <!-- Global Leaderboard Overlay -->
     <div id="lb-overlay" class="overlay">
-        <div class="fancy-title" style="font-size: 2rem;">Hall of Fame</div>
-        <div class="lb" id="leaderboard-main">LOADING ARCHIVE...</div>
+        <div class="fancy-title" style="font-size: 2.5rem;">The Archive</div>
+        <div class="lb" id="leaderboard-main">LOADING RECORDS...</div>
         <button onclick="toggleLB(false)" style="margin-top: 30px;">CLOSE</button>
     </div>
 
-    <!-- Game Over Overlay -->
     <div id="results-overlay" class="overlay">
         <div id="final-score">0.000</div>
         <div id="insult-box" class="insult"></div>
