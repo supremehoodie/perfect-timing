@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PERFECT SYNC</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;400;800&family=UnifrakturMaguntia&display=swap');
+        
+        :root { --bg: #000; --white: #fff; --red: #ff003c; --font: 'JetBrains Mono', monospace; --fancy: 'UnifrakturMaguntia', serif; }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body, html { background: var(--bg); color: var(--white); font-family: var(--font); width: 100%; height: 100%; overflow-x: hidden; }
+        
+        /* Entry Screen - Minimalist */
+        #entry-gate { 
+            position: relative; width: 100%; min-height: 180vh; /* Forced scroll for branding */
+            display: flex; flex-direction: column; align-items: center; padding-top: 15vh;
+        }
+
+        .fancy-title { font-family: var(--fancy); font-size: 4rem; margin-bottom: 10px; color: var(--white); text-shadow: 0 0 20px rgba(255,255,255,0.3); }
+        .gate-msg { font-size: 14px; letter-spacing: 4px; margin-bottom: 40px; font-weight: 800; opacity: 0.6; }
+
+        .main-ui { display: flex; flex-direction: column; align-items: center; gap: 15px; position: sticky; top: 25vh; }
+        input { background: transparent; border: 1px solid var(--white); color: var(--white); padding: 18px; font-family: var(--font); font-size: 1.2rem; text-align: center; outline: none; width: 280px; text-transform: uppercase; }
+        
+        .btn-group { display: flex; flex-direction: column; gap: 10px; }
+        button { background: var(--white); color: var(--bg); border: none; padding: 18px 50px; font-family: var(--font); font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.2s; }
+        button.alt { background: transparent; color: var(--white); border: 1px solid var(--white); }
+        button:active { opacity: 0.7; transform: scale(0.98); }
+
+        /* Hidden Basement Branding */
+        .branding-basement { margin-top: 100vh; padding-bottom: 100px; display: flex; flex-direction: column; align-items: center; opacity: 0.4; }
+        #can-box-entry { width: 140px; height: auto; transform-style: preserve-3d; animation: spin 8s linear infinite; cursor: pointer; margin-bottom: 20px; }
+        #pablos-can { width: 100%; height: auto; }
+        @keyframes spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+        .pablos-text { font-size: 9px; letter-spacing: 10px; text-transform: uppercase; }
+        .rizzking-title { font-size: 2rem; font-weight: 800; letter-spacing: 20px; margin-top: 20px; }
+
+        /* Game Screen */
+        .game-container { height: 100vh; width: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; position: fixed; inset: 0; background: var(--bg); z-index: 1000; }
+        #display { font-size: 25vw; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -2px; pointer-events: none; }
+        .instruction-head { position: absolute; top: 40px; font-size: 14px; letter-spacing: 4px; opacity: 0.7; text-transform: uppercase; font-weight: 800; }
+
+        /* Rizzking Pop */
+        .rizz { position: absolute; font-size: 2rem; font-weight: 800; color: #4dfd4d; text-transform: uppercase; animation: rise 0.8s ease-out forwards; pointer-events: none; z-index: 2000; }
+        @keyframes rise { 0% { transform: translate(-50%, 0); opacity: 1; } 100% { transform: translate(-50%, -150px); opacity: 0; } }
+
+        /* Overlays (Leaderboard & Results) */
+        .overlay { position: fixed; inset: 0; background: var(--bg); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1500; padding: 20px; text-align: center; }
+        #final-score { font-size: 5rem; font-weight: 800; }
+        .insult { color: var(--red); font-size: 1rem; margin: 15px 0; text-transform: uppercase; max-width: 350px; }
+        
+        .lb { width: 100%; max-width: 320px; margin-top: 20px; border-top: 1px solid #222; max-height: 40vh; overflow-y: auto; }
+        .lb::-webkit-scrollbar { width: 4px; }
+        .lb::-webkit-scrollbar-thumb { background: #333; }
+        .row { display: flex; justify-content: space-between; font-size: 12px; padding: 12px 0; border-bottom: 1px solid #111; }
+    </style>
+</head>
+<body>
+
+    <div id="entry-gate">
+        <div class="main-ui">
+            <div class="fancy-title">Perfect Timing</div>
+            <div class="gate-msg">U GOT TO GET TO 1.000 SEC</div>
+            
+            <input type="text" id="name-input" placeholder="ENTER NAME" maxlength="12">
+            
+            <div class="btn-group">
+                <button onclick="init()">START LINK</button>
+                <button class="alt" onclick="toggleLB(true)">LEADERBOARD</button>
+            </div>
+        </div>
+
+        <div class="branding-basement">
+            <div id="can-box-entry" onclick="rizz(event)">
+                <img id="pablos-can" src="pablos.png" alt="Pablos">
+            </div>
+            <div class="pablos-text">POWERED BY PABLOS</div>
+            <div class="rizzking-title">RIZZKING</div>
+        </div>
+    </div>
+
+    <div class="game-container" id="game-page">
+        <div class="instruction-head">U GOT TO GET TO 1.000 SEC</div>
+        <div id="display">0.000</div>
+    </div>
+
+    <!-- Global Leaderboard Overlay -->
+    <div id="lb-overlay" class="overlay">
+        <div class="fancy-title" style="font-size: 2rem;">Hall of Fame</div>
+        <div class="lb" id="leaderboard-main">LOADING ARCHIVE...</div>
+        <button onclick="toggleLB(false)" style="margin-top: 30px;">CLOSE</button>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div id="results-overlay" class="overlay">
+        <div id="final-score">0.000</div>
+        <div id="insult-box" class="insult"></div>
+        <div class="lb" id="leaderboard-end"></div>
+        <button onclick="reset()">RE-SYNC</button>
+    </div>
+
+    <script src="sync.js"></script>
+</body>
+</html>
