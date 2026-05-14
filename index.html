@@ -3,104 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TIMESTAMP</title>
+    <title>TIMESTAMP // PERFORMANCE</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;400;800&family=Orbitron:wght@900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;400;800&family=Orbitron:wght@700;900&family=UnifrakturMaguntia&display=swap');
         
-        :root { --bg: #000; --white: #fff; --red: #ff003c; --blue: #007aff; --font: 'Orbitron', sans-serif; --timer: 'JetBrains Mono', monospace; }
+        :root { 
+            --bg: #050505; --white: #ffffff; --accent: #4dfd4d; 
+            --red: #ff003c; --font: 'Orbitron', sans-serif; 
+            --fancy: 'UnifrakturMaguntia', serif; /* The cursive/fancy font */
+            --timer: 'JetBrains Mono', monospace; /* The reverted timer font */
+        }
         
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body, html { background: var(--bg); color: var(--white); font-family: var(--font); width: 100%; height: 100%; overflow: hidden; }
-        
-        #entry-gate { position: relative; width: 100%; min-height: 220vh; display: flex; flex-direction: column; align-items: center; padding-top: 15vh; }
 
-        .dynamic-title { 
-            font-size: 14vw; font-weight: 900; text-transform: uppercase; letter-spacing: 2px;
-            background: linear-gradient(90deg, #222, #fff, #222);
+        /* Subtle Scanline Overlay */
+        body::before {
+            content: " "; position: fixed; inset: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.05) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            background-size: 100% 4px, 4px 100%; z-index: 2000; pointer-events: none; opacity: 0.3;
+        }
+        
+        #entry-gate { position: relative; width: 100%; min-height: 250vh; display: flex; flex-direction: column; align-items: center; padding-top: 10vh; }
+
+        /* Cursive Title with Shine */
+        .fancy-title { 
+            font-family: var(--fancy); font-size: 18vw; font-weight: 400;
+            background: linear-gradient(90deg, #111, #fff, #111);
             background-size: 200% auto; color: transparent; -webkit-background-clip: text;
-            animation: shine 4s linear infinite; margin-bottom: 20px; text-align: center;
+            animation: shine 5s linear infinite; margin-bottom: 5px; text-align: center;
         }
         @keyframes shine { to { background-position: 200% center; } }
 
-        .main-ui { display: flex; flex-direction: column; align-items: center; gap: 15px; position: sticky; top: 15vh; z-index: 10; }
+        .main-ui { display: flex; flex-direction: column; align-items: center; gap: 10px; position: sticky; top: 10vh; z-index: 10; }
         
-        /* Robotic Borderless Input */
         input { 
             background: transparent; border: none; color: var(--white); padding: 15px; 
-            font-family: var(--font); font-size: 1.2rem; text-align: center; outline: none; 
-            width: 320px; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 20px;
+            font-family: var(--font); font-size: 1.4rem; text-align: center; outline: none; 
+            width: 320px; text-transform: uppercase; letter-spacing: 4px;
         }
+        input::placeholder { color: rgba(255,255,255,0.1); }
         
-        button { background: var(--white); color: var(--bg); border: none; padding: 20px; font-family: var(--font); font-weight: 900; cursor: pointer; text-transform: uppercase; letter-spacing: 3px; border-radius: 50px; transition: 0.3s; width: 300px; }
-        button.alt { background: transparent; color: var(--white); border: 2px solid var(--white); margin-top: 10px; }
+        button { 
+            background: var(--white); color: #000; border: none; padding: 22px; 
+            font-family: var(--font); font-weight: 900; cursor: pointer; 
+            text-transform: uppercase; letter-spacing: 3px; border-radius: 100px; 
+            transition: all 0.3s; width: 300px; font-size: 0.8rem;
+        }
+        button.alt { background: transparent; color: var(--white); border: 1px solid rgba(255,255,255,0.2); margin-top: 10px; }
+        button:hover { background: var(--accent); color: #000; box-shadow: 0 0 30px rgba(77, 253, 77, 0.3); }
 
-        /* Hidden Branding Basement */
-        .branding-basement { margin-top: 180vh; padding-bottom: 100px; display: flex; flex-direction: column; align-items: center; opacity: 0.1; }
-        #can-box-entry { width: 100px; animation: spin 10s linear infinite; }
+        .branding-basement { margin-top: 200vh; padding-bottom: 120px; display: flex; flex-direction: column; align-items: center; opacity: 0.05; }
+        #can-box-entry { width: 80px; animation: spin 15s linear infinite; cursor: pointer; }
         @keyframes spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
 
         /* Game Screen */
         .game-container { height: 100vh; width: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; position: fixed; inset: 0; background: var(--bg); z-index: 1000; }
-        #display { font-family: var(--timer); font-size: 20vw; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -5px; }
-        .instruction-head { position: absolute; top: 60px; font-size: 0.8rem; letter-spacing: 5px; opacity: 0.7; text-transform: uppercase; font-weight: 900; }
+        #display { font-family: var(--timer); font-size: 22vw; font-weight: 800; letter-spacing: -8px; }
+        .instruction-head { position: absolute; top: 60px; font-size: 0.7rem; letter-spacing: 6px; opacity: 0.4; text-transform: uppercase; font-weight: 700; }
 
-        /* Color Game UI */
-        #color-box { display: none; gap: 20px; margin-top: 40px; }
-        .color-circle { width: 80px; height: 80px; border-radius: 50%; cursor: pointer; border: 4px solid transparent; }
-        .color-circle:active { transform: scale(0.9); }
+        /* Stage 2 - Grid Matrix */
+        #matrix-box { display: none; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 40px; width: 220px; height: 220px; }
+        .matrix-cell { background: #111; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; transition: 0.1s; cursor: pointer; }
+        .matrix-cell.active { background: var(--white); box-shadow: 0 0 50px var(--white); }
 
-        /* Overlays */
-        .overlay { position: fixed; inset: 0; background: var(--bg); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1500; padding: 20px; text-align: center; }
-        #rank-msg { font-size: 1.2rem; color: #4dfd4d; margin-bottom: 10px; letter-spacing: 4px; font-weight: 900; }
-        #final-score { font-size: 5rem; font-weight: 900; font-family: var(--timer); }
-        .insult { color: var(--red); font-size: 1rem; margin: 20px 0; text-transform: uppercase; max-width: 350px; font-weight: 900; }
+        /* Results Display */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.99); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1500; padding: 20px; text-align: center; }
+        #rank-data { font-size: 1.2rem; color: var(--accent); margin-bottom: 5px; letter-spacing: 4px; font-weight: 700; }
+        #final-score { font-size: 6rem; font-weight: 800; font-family: var(--timer); margin: 5px 0; }
+        .insult { color: var(--red); font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 30px; opacity: 0.6; font-weight: 800; }
         
-        .lb { width: 100%; max-width: 350px; border-top: 1px solid #222; max-height: 40vh; overflow-y: auto; margin-top: 20px; }
-        .row { display: flex; justify-content: space-between; font-size: 11px; padding: 15px 0; border-bottom: 1px solid #111; }
-        .current-user { color: #4dfd4d; }
+        .lb { width: 100%; max-width: 350px; border-top: 1px solid #111; max-height: 45vh; overflow-y: auto; margin-top: 20px; font-family: var(--timer); }
+        .row { display: flex; justify-content: space-between; font-size: 10px; padding: 15px 10px; border-bottom: 1px solid #111; opacity: 0.5; }
+        .current-user { background: rgba(77, 253, 77, 0.15); opacity: 1; color: var(--accent); }
     </style>
 </head>
 <body>
 
     <div id="entry-gate">
         <div class="main-ui">
-            <div class="dynamic-title">TIMESTAMP</div>
-            <input type="text" id="name-input" placeholder="ENTER NAME..." maxlength="12">
-            <button onclick="init()">START GAUNTLET</button>
-            <button class="alt" onclick="toggleLB(true)">LEADERBOARD</button>
+            <div class="fancy-title">Timestamp</div>
+            <input type="text" id="name-input" placeholder="ENTER NAME..." maxlength="12" autocomplete="off">
+            <button onclick="init()">INITIALIZE</button>
+            <button class="alt" onclick="toggleLB(true)">THE ARCHIVE</button>
         </div>
 
         <div class="branding-basement">
-            <div id="can-box-entry"><img src="pablos.png" style="width:100%"></div>
-            <div style="font-size: 2rem; letter-spacing: 15px; font-weight: 900; margin-top: 20px; opacity: 0.5;">RIZZKING</div>
+            <div id="can-box-entry" onclick="rizz(event)"><img src="pablos.png" style="width:100%"></div>
+            <div style="font-family: var(--fancy); font-size: 2rem; letter-spacing: 5px; margin-top: 10px;">Rizzking</div>
         </div>
     </div>
 
     <div class="game-container" id="game-page">
-        <div id="stage-tracker" style="position:absolute; top:30px; opacity:0.3; font-size:0.7rem; letter-spacing:3px;">STAGE 1/3</div>
-        <div class="instruction-head" id="mode-instr">PREPARING...</div>
+        <div id="stage-tracker" style="position:absolute; top:30px; opacity:0.2; font-size:0.6rem; letter-spacing:4px;">PRO_SESSION // 001</div>
+        <div class="instruction-head" id="mode-instr">STANDBY...</div>
         <div id="display">READY</div>
         
-        <div id="color-box">
-            <div class="color-circle" style="background: var(--white)" onclick="checkColor('WHITE')"></div>
-            <div class="color-circle" style="background: var(--red)" onclick="checkColor('RED')"></div>
-            <div class="color-circle" style="background: var(--blue)" onclick="checkColor('BLUE')"></div>
+        <div id="matrix-box">
+            <div class="matrix-cell" id="cell-0" onclick="hitMatrix(0)"></div>
+            <div class="matrix-cell" id="cell-1" onclick="hitMatrix(1)"></div>
+            <div class="matrix-cell" id="cell-2" onclick="hitMatrix(2)"></div>
+            <div class="matrix-cell" id="cell-3" onclick="hitMatrix(3)"></div>
         </div>
     </div>
 
     <div id="results-overlay" class="overlay">
-        <div id="rank-msg">STAGE COMPLETE</div>
-        <div id="stage-name" style="font-size: 10px; opacity: 0.4; letter-spacing: 3px; margin-bottom: 5px;">CLASSIC SYNC</div>
+        <div id="rank-data">CALCULATING...</div>
+        <div style="font-size: 10px; opacity: 0.3; letter-spacing: 3px; margin-bottom: 10px;" id="stage-name">SYNC_FINAL</div>
         <div id="final-score">0.000</div>
-        <div id="insult-box" class="insult"></div>
+        <div id="insult-box" class="insult">CALIBRATION COMPLETE</div>
         <button id="action-btn" onclick="nextAction()">CONTINUE</button>
     </div>
 
     <div id="lb-overlay" class="overlay">
-        <div class="dynamic-title" style="font-size: 2rem;">LEADERBOARD</div>
+        <div class="fancy-title" style="font-size: 4rem; animation: none; color: white;">Leaderboard</div>
+        <div id="total-players" style="font-size: 8px; opacity: 0.4; letter-spacing: 2px; margin-bottom: 10px;">TOTAL ENTRIES: 0</div>
         <div class="lb" id="leaderboard-main"></div>
-        <button onclick="toggleLB(false)" style="margin-top: 30px;">BACK</button>
+        <button onclick="toggleLB(false)" class="alt" style="margin-top: 30px;">EXIT ARCHIVE</button>
     </div>
 
     <script src="sync.js"></script>
