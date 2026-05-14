@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PERFECT SYNC</title>
+    <title>TIMESTAMP</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;400;800&family=UnifrakturMaguntia&display=swap');
@@ -13,94 +13,77 @@
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body, html { background: var(--bg); color: var(--white); font-family: var(--font); width: 100%; height: 100%; overflow-x: hidden; }
         
-        /* Entry Screen - Clean & Minimal */
         #entry-gate { 
-            position: relative; width: 100%; min-height: 200vh; /* Deep scroll for branding */
-            display: flex; flex-direction: column; align-items: center; padding-top: 15vh;
+            position: relative; width: 100%; min-height: 250vh; 
+            display: flex; flex-direction: column; align-items: center; padding-top: 10vh;
         }
 
-        /* B&W Title Animation */
+        /* The B&W Strobe Title */
         .fancy-title { 
-            font-family: var(--fancy); font-size: 5rem; margin-bottom: 10px; 
-            color: var(--white); 
-            animation: bw-strobe 3s steps(1) infinite;
-            text-align: center;
+            font-family: var(--fancy); font-size: 6rem; margin-bottom: 5px; 
+            animation: bw-strobe 3s steps(1) infinite; text-align: center;
         }
-        
-        @keyframes bw-strobe {
-            0%, 100% { opacity: 1; filter: invert(0); }
-            95% { opacity: 0.8; filter: invert(0.1); }
-            96% { opacity: 0.2; filter: invert(1); }
-            97% { opacity: 1; filter: invert(0); }
-            98% { opacity: 0.1; filter: invert(1); }
-        }
+        @keyframes bw-strobe { 0%, 100% { opacity: 1; filter: invert(0); } 96% { opacity: 0.2; filter: invert(1); } }
 
-        .gate-msg { font-size: 14px; letter-spacing: 4px; margin-bottom: 50px; font-weight: 800; opacity: 0.6; }
-
-        .main-ui { display: flex; flex-direction: column; align-items: center; gap: 20px; position: sticky; top: 20vh; z-index: 10; }
+        .main-ui { display: flex; flex-direction: column; align-items: center; gap: 15px; position: sticky; top: 8vh; z-index: 10; }
+        input { background: transparent; border: 1px solid var(--white); color: var(--white); padding: 20px; font-family: var(--font); font-size: 1.2rem; text-align: center; outline: none; width: 320px; border-radius: 50px; margin-bottom: 5px; }
         
-        input { 
-            background: transparent; border: 1px solid var(--white); color: var(--white); 
-            padding: 20px; font-family: var(--font); font-size: 1.2rem; text-align: center; 
-            outline: none; width: 300px; text-transform: uppercase; border-radius: 50px; /* Circular edges */
-            margin-bottom: 10px;
-        }
-        
-        /* Circular/Pill Buttons */
-        .btn-group { display: flex; flex-direction: column; gap: 15px; width: 300px; }
+        .btn-group { display: flex; flex-direction: column; gap: 10px; width: 320px; }
         button { 
-            background: var(--white); color: var(--bg); border: none; 
-            padding: 20px; font-family: var(--font); font-weight: 800; 
-            cursor: pointer; text-transform: uppercase; letter-spacing: 2px; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 50px; /* The Circular Button Look */
+            background: var(--white); color: var(--bg); border: none; padding: 18px; 
+            font-family: var(--font); font-weight: 800; cursor: pointer; 
+            text-transform: uppercase; letter-spacing: 2px; border-radius: 50px; transition: 0.3s; 
         }
         button.alt { background: transparent; color: var(--white); border: 1px solid var(--white); }
-        button:hover { letter-spacing: 5px; }
-        button:active { opacity: 0.7; transform: scale(0.95); }
+        .mode-btn { font-size: 0.75rem; opacity: 0.5; border: 1px solid transparent; }
+        .mode-btn.active { opacity: 1; border: 1px solid var(--white); }
 
-        /* Branding Basement - Hidden way down */
-        .branding-basement { margin-top: 150vh; padding-bottom: 100px; display: flex; flex-direction: column; align-items: center; opacity: 0.3; }
-        #can-box-entry { width: 150px; height: auto; transform-style: preserve-3d; animation: spin 8s linear infinite; cursor: pointer; margin-bottom: 20px; }
-        #pablos-can { width: 100%; height: auto; }
+        /* The Hidden Basement */
+        .branding-basement { margin-top: 180vh; padding-bottom: 120px; display: flex; flex-direction: column; align-items: center; opacity: 0.2; }
+        #can-box-entry { width: 130px; animation: spin 8s linear infinite; cursor: pointer; margin-bottom: 15px; }
         @keyframes spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
-        .pablos-text { font-size: 10px; letter-spacing: 12px; text-transform: uppercase; }
-        .rizzking-title { font-size: 2.5rem; font-weight: 800; letter-spacing: 25px; margin-top: 25px; }
+        .pablos-text { font-size: 9px; letter-spacing: 12px; text-transform: uppercase; }
+        .rizzking-title { font-size: 2.2rem; font-weight: 800; letter-spacing: 22px; margin-top: 25px; }
 
-        /* Game Screen */
+        /* Game UI */
         .game-container { height: 100vh; width: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; position: fixed; inset: 0; background: var(--bg); z-index: 1000; }
-        #display { font-size: 25vw; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -2px; pointer-events: none; }
-        .instruction-head { position: absolute; top: 40px; font-size: 14px; letter-spacing: 4px; opacity: 0.7; text-transform: uppercase; font-weight: 800; }
+        #display { font-size: 25vw; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -3px; }
+        .instruction-head { position: absolute; top: 40px; font-size: 14px; letter-spacing: 4px; opacity: 0.7; font-weight: 800; text-transform: uppercase; }
+
+        /* Popups */
+        .rizz { position: absolute; font-size: 2rem; font-weight: 800; color: #4dfd4d; text-transform: uppercase; animation: rise 0.8s ease-out forwards; pointer-events: none; z-index: 2000; }
+        @keyframes rise { 0% { transform: translate(-50%, 0); opacity: 1; } 100% { transform: translate(-50%, -150px); opacity: 0; } }
 
         /* Overlays */
         .overlay { position: fixed; inset: 0; background: var(--bg); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1500; padding: 20px; text-align: center; }
-        #final-score { font-size: 5rem; font-weight: 800; }
-        .insult { color: var(--red); font-size: 1.1rem; margin: 15px 0; text-transform: uppercase; max-width: 350px; }
+        #final-score { font-size: 6rem; font-weight: 800; }
+        .insult { color: var(--red); font-size: 1.1rem; margin: 15px 0; text-transform: uppercase; max-width: 400px; line-height: 1.5; font-weight: 800; }
         
-        .lb { width: 100%; max-width: 320px; margin-top: 20px; border-top: 1px solid #222; max-height: 40vh; overflow-y: auto; }
+        .lb { width: 100%; max-width: 320px; border-top: 1px solid #222; max-height: 35vh; overflow-y: auto; margin-top: 20px; }
         .lb::-webkit-scrollbar { width: 4px; }
         .lb::-webkit-scrollbar-thumb { background: #333; }
-        .row { display: flex; justify-content: space-between; font-size: 12px; padding: 12px 0; border-bottom: 1px solid #111; }
+        .row { display: flex; justify-content: space-between; font-size: 11px; padding: 12px 0; border-bottom: 1px solid #111; }
     </style>
 </head>
 <body>
 
     <div id="entry-gate">
         <div class="main-ui">
-            <div class="fancy-title">Perfect Timing</div>
-            <div class="gate-msg">U GOT TO GET TO 1.000 SEC</div>
-            
+            <div class="fancy-title">Timestamp</div>
             <input type="text" id="name-input" placeholder="ENTER NAME" maxlength="12">
             
             <div class="btn-group">
-                <button onclick="init()">START LINK</button>
-                <button class="alt" onclick="toggleLB(true)">LEADERBOARD</button>
+                <button onclick="setMode('CLASSIC')" id="btn-CLASSIC" class="mode-btn active">CLASSIC SYNC</button>
+                <button onclick="setMode('BLIND')" id="btn-BLIND" class="mode-btn">BLIND SYNC</button>
+                <button onclick="setMode('REFLEX')" id="btn-REFLEX" class="mode-btn">REFLEX TEST</button>
+                <button onclick="init()" style="margin-top:10px;">START SESSION</button>
+                <button class="alt" onclick="toggleLB(true)">THE ARCHIVE</button>
             </div>
         </div>
 
         <div class="branding-basement">
             <div id="can-box-entry" onclick="rizz(event)">
-                <img id="pablos-can" src="pablos.png" alt="Pablos">
+                <img src="pablos.png" style="width:100%">
             </div>
             <div class="pablos-text">POWERED BY PABLOS</div>
             <div class="rizzking-title">RIZZKING</div>
@@ -108,13 +91,13 @@
     </div>
 
     <div class="game-container" id="game-page">
-        <div class="instruction-head">U GOT TO GET TO 1.000 SEC</div>
+        <div class="instruction-head" id="mode-instr">GET TO 1.000 SEC</div>
         <div id="display">0.000</div>
     </div>
 
     <div id="lb-overlay" class="overlay">
-        <div class="fancy-title" style="font-size: 2.5rem;">The Archive</div>
-        <div class="lb" id="leaderboard-main">LOADING RECORDS...</div>
+        <div class="fancy-title" style="font-size: 3rem;">The Archive</div>
+        <div class="lb" id="leaderboard-main"></div>
         <button onclick="toggleLB(false)" style="margin-top: 30px;">CLOSE</button>
     </div>
 
