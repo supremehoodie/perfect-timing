@@ -5,10 +5,10 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
 const stages = [
     { id: 'CLASSIC', instr: 'GET TO 1.000 SEC' },
     { id: 'BLIND', instr: 'GET TO 1.000 SEC (BLIND)' },
-    { id: 'REFLEX', instr: 'CLICK WHEN SCREEN FLASHES' }
+    { id: 'REFLEX', instr: 'CLICK ON FLASH' }
 ];
 
-let start, active = false, user = "ANON", currentStage = 0, totalDiff = 0, reflexWaiting = false, reflexTimeout;
+let start, active = false, user = "ANON", currentStage = 0, totalDiff = 0, reflexWaiting = false, reflexTimeout, countdownActive = false;
 
 const d = document.getElementById("display");
 const resO = document.getElementById("results-overlay");
@@ -22,21 +22,29 @@ function init() {
         user = input.value.toUpperCase();
         gate.style.display = "none";
         currentStage = 0; totalDiff = 0;
-        prepareStage();
         gamePage.style.display = "flex";
+        prepareStage();
     }
 }
 
 function prepareStage() {
-    active = false; reflexWaiting = false;
-    d.innerText = "0.000"; d.style.color = "#fff";
+    active = false; reflexWaiting = false; countdownActive = true;
+    d.innerText = "WAIT"; d.style.color = "#fff";
     gamePage.style.background = "#000";
-    document.getElementById('mode-instr').innerText = stages[currentStage].instr;
+    document.getElementById('mode-instr').innerText = "PREPARING...";
     document.getElementById('stage-tracker').innerText = `STAGE ${currentStage + 1}/3`;
+
+    // 1.5 second delay before stage becomes playable
+    setTimeout(() => {
+        countdownActive = false;
+        d.innerText = "READY";
+        document.getElementById('mode-instr').innerText = stages[currentStage].instr;
+    }, 1500);
 }
 
 function trigger() {
-    if (gamePage.style.display !== "flex" || resO.style.display === "flex" || lbO.style.display === "flex") return;
+    if (gamePage.style.display !== "flex" || resO.style.display === "flex" || lbO.style.display === "flex" || countdownActive) return;
+    
     if (stages[currentStage].id === 'REFLEX') {
         if (!active && !reflexWaiting) startReflex();
         else if (reflexWaiting) { clearTimeout(reflexTimeout); stopGame(true); }
@@ -56,7 +64,7 @@ function runLoop() {
 }
 
 function startReflex() {
-    reflexWaiting = true; d.innerText = "WAIT...";
+    reflexWaiting = true; d.innerText = "WAITING...";
     reflexTimeout = setTimeout(() => {
         reflexWaiting = false; active = true;
         gamePage.style.background = "#fff"; d.style.color = "#000";
@@ -81,25 +89,17 @@ function stopGame(fault = false) {
 async function finishGauntlet() {
     gamePage.style.display = "none";
     document.getElementById("final-score").innerText = totalDiff.toFixed(3);
-    document.getElementById("insult-box").innerText = totalDiff < 0.05 ? "GOD STATUS." : "EMBARRASSING PERFORMANCE.";
+    document.getElementById("insult-box").innerText = totalDiff < 0.1 ? "GOD STATUS." : "ABSOLUTELY TRASH.";
     
-    // Push score and get rank
     const rank = await pushAndGetRank(totalDiff);
     document.getElementById("rank-msg").innerText = `GLOBAL RANK: #${rank}`;
     resO.style.display = "flex";
 }
 
 async function pushAndGetRank(score) {
-    // 1. Insert the score
     await sb.from('scores').insert([{ name: user, score: score, diff: score }]);
-    
-    // 2. Count how many people are BETTER than this score
-    const { count } = await sb
-        .from('scores')
-        .select('*', { count: 'exact', head: true })
-        .lt('diff', score);
-    
-    return count + 1; // Your rank is (people better than you) + 1
+    const { count } = await sb.from('scores').select('*', { count: 'exact', head: true }).lt('diff', score);
+    return count + 1;
 }
 
 async function toggleLB(show) {
