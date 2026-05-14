@@ -62,8 +62,7 @@ function trigger() {
 
 function startGridStage() {
     active = true; gridHits = 0;
-    d.style.display = "none";
-    matrixBox.style.display = "grid";
+    d.style.display = "none"; matrixBox.style.display = "grid";
     start = performance.now();
     nextTarget();
 }
@@ -85,8 +84,7 @@ function hitMatrix(id) {
 
 function runLoop() {
     if (!active) return;
-    const cur = (performance.now() - start) / 1000;
-    d.innerText = cur.toFixed(3);
+    d.innerText = ((performance.now() - start) / 1000).toFixed(3);
     requestAnimationFrame(runLoop);
 }
 
@@ -104,21 +102,33 @@ function stopGame(fault = false) {
     const end = performance.now();
     const sid = stages[currentStage].id;
     let rawValue = (end - start) / 1000;
-    let diff = 0;
-
-    if (sid === 'CLASSIC') {
-        diff = Math.abs(1.000 - rawValue);
-        document.getElementById("final-score").innerText = rawValue.toFixed(3);
-    } else {
-        diff = fault ? 1.000 : rawValue;
-        document.getElementById("final-score").innerText = diff.toFixed(3);
-    }
+    let diff = fault ? 1.000 : (sid === 'CLASSIC' ? Math.abs(1.000 - rawValue) : rawValue);
 
     totalDiff += diff;
+    
+    // DISPLAY RAW NUMBER FOR STAGE 1
+    document.getElementById("final-score").innerText = sid === 'CLASSIC' ? rawValue.toFixed(3) : diff.toFixed(3);
     document.getElementById("stage-name").innerText = stages[currentStage].name;
-    document.getElementById("insult-box").innerText = fault ? "FAULT_DETECTED" : (diff < 0.15 ? "OPTIMAL_LEVEL" : "SYNC_DELAYED");
-    document.getElementById("action-btn").innerText = currentStage < 2 ? "PROCEED" : "SAVE RESULTS";
+    document.getElementById("insult-box").innerText = fault ? "ACTUAL RETARD LEVEL PERFORMANCE. LOG OFF." : roast(diff);
+    document.getElementById("action-btn").innerText = currentStage < 2 ? "PROCEED" : "ARCHIVE RESULTS";
+    
+    // CALCULATE AND SHOW RANK IMMEDIATELY
+    showRank(totalDiff);
     resO.style.display = "flex";
+}
+
+async function showRank(score) {
+    const { count: betterCount } = await sb.from('scores').select('*', { count: 'exact', head: true }).lt('diff', score);
+    const { count: totalCount } = await sb.from('scores').select('*', { count: 'exact', head: true });
+    document.getElementById("rank-data").innerText = `RANK #${betterCount + 1} OF ${totalCount + 1}`;
+}
+
+function roast(diff) {
+    if (diff === 0) return "GOD STATUS ACHIEVED. UNINSTALL THE REST OF YOUR LIFE.";
+    if (diff < 0.01) return "CLEAN AS HELL. YOU MIGHT ACTUALLY HAVE A BRAIN.";
+    if (diff < 0.05) return "ACCEPTABLE. BARELY.";
+    if (diff < 0.15) return "DOGWATER TIMING. MY DECEASED GRANDMA IS FASTER.";
+    return "ACTUAL RETARD LEVEL PERFORMANCE. LOG OFF.";
 }
 
 async function nextAction() {
@@ -128,18 +138,8 @@ async function nextAction() {
 }
 
 async function finishGauntlet() {
-    document.getElementById("stage-name").innerText = "SYSTEM_TOTAL_ERROR";
-    document.getElementById("final-score").innerText = totalDiff.toFixed(3);
-    document.getElementById("action-btn").innerText = "RE-BOOT";
-    document.getElementById("action-btn").onclick = () => location.reload();
-    
     await sb.from('scores').insert([{ name: user, score: totalDiff, diff: totalDiff }]);
-    
-    const { count: betterCount } = await sb.from('scores').select('*', { count: 'exact', head: true }).lt('diff', totalDiff);
-    const { count: totalCount } = await sb.from('scores').select('*', { count: 'exact', head: true });
-    
-    document.getElementById("rank-data").innerText = `RANK #${betterCount + 1} OF ${totalCount}`;
-    resO.style.display = "flex";
+    location.reload();
 }
 
 async function toggleLB(show) {

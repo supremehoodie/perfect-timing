@@ -11,14 +11,14 @@
         :root { 
             --bg: #050505; --white: #ffffff; --accent: #4dfd4d; 
             --red: #ff003c; --font: 'Orbitron', sans-serif; 
-            --fancy: 'UnifrakturMaguntia', serif; /* The cursive/fancy font */
-            --timer: 'JetBrains Mono', monospace; /* The reverted timer font */
+            --fancy: 'UnifrakturMaguntia', serif; 
+            --timer: 'JetBrains Mono', monospace; 
         }
         
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body, html { background: var(--bg); color: var(--white); font-family: var(--font); width: 100%; height: 100%; overflow: hidden; }
 
-        /* Subtle Scanline Overlay */
+        /* Performance Scanlines */
         body::before {
             content: " "; position: fixed; inset: 0; width: 100%; height: 100%;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.05) 50%), 
@@ -28,9 +28,8 @@
         
         #entry-gate { position: relative; width: 100%; min-height: 250vh; display: flex; flex-direction: column; align-items: center; padding-top: 10vh; }
 
-        /* Cursive Title with Shine */
         .fancy-title { 
-            font-family: var(--fancy); font-size: 18vw; font-weight: 400;
+            font-family: var(--fancy); font-size: 16vw; font-weight: 400;
             background: linear-gradient(90deg, #111, #fff, #111);
             background-size: 200% auto; color: transparent; -webkit-background-clip: text;
             animation: shine 5s linear infinite; margin-bottom: 5px; text-align: center;
@@ -71,11 +70,11 @@
 
         /* Results Display */
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.99); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1500; padding: 20px; text-align: center; }
-        #rank-data { font-size: 1.2rem; color: var(--accent); margin-bottom: 5px; letter-spacing: 4px; font-weight: 700; }
+        #rank-data { font-size: 1.4rem; color: var(--accent); margin-bottom: 10px; letter-spacing: 5px; font-weight: 900; }
         #final-score { font-size: 6rem; font-weight: 800; font-family: var(--timer); margin: 5px 0; }
-        .insult { color: var(--red); font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 30px; opacity: 0.6; font-weight: 800; }
+        .insult { color: var(--red); font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 30px; opacity: 0.8; font-weight: 900; max-width: 320px; line-height: 1.4; }
         
-        .lb { width: 100%; max-width: 350px; border-top: 1px solid #111; max-height: 45vh; overflow-y: auto; margin-top: 20px; font-family: var(--timer); }
+        .lb { width: 100%; max-width: 350px; border-top: 1px solid #111; max-height: 40vh; overflow-y: auto; margin-top: 20px; font-family: var(--timer); }
         .row { display: flex; justify-content: space-between; font-size: 10px; padding: 15px 10px; border-bottom: 1px solid #111; opacity: 0.5; }
         .current-user { background: rgba(77, 253, 77, 0.15); opacity: 1; color: var(--accent); }
     </style>
@@ -87,7 +86,7 @@
             <div class="fancy-title">Timestamp</div>
             <input type="text" id="name-input" placeholder="ENTER NAME..." maxlength="12" autocomplete="off">
             <button onclick="init()">INITIALIZE</button>
-            <button class="alt" onclick="toggleLB(true)">THE ARCHIVE</button>
+            <button class="alt" onclick="toggleLB(true)">LEADERBOARD</button>
         </div>
 
         <div class="branding-basement">
@@ -110,8 +109,8 @@
     </div>
 
     <div id="results-overlay" class="overlay">
-        <div id="rank-data">CALCULATING...</div>
-        <div style="font-size: 10px; opacity: 0.3; letter-spacing: 3px; margin-bottom: 10px;" id="stage-name">SYNC_FINAL</div>
+        <div id="rank-data">RANKING...</div>
+        <div style="font-size: 9px; opacity: 0.3; letter-spacing: 3px; margin-bottom: 5px;" id="stage-name">SYNC_FINAL</div>
         <div id="final-score">0.000</div>
         <div id="insult-box" class="insult">CALIBRATION COMPLETE</div>
         <button id="action-btn" onclick="nextAction()">CONTINUE</button>
